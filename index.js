@@ -31,6 +31,22 @@ app.post("/tasks", async (req, res) => {
     }
 });
 
+app.delete("/tasks/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const findTask = await TaskModel.findById(id);
+        if (!findTask) {
+            res.status(404).send("Task not found");
+        }
+
+       await TaskModel.deleteOne({ _id: id });
+
+        res.status(200).send(findTask);
+    } catch {
+        res.status(500).send(error.message);
+    }
+});
+
 app.listen(8080, () => {
     console.log("Server is running on port 8080");
 });
