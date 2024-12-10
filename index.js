@@ -23,7 +23,6 @@ app.get("/tasks/:id", async (req, res) => {
     const { id } = req.params;
     try {
         const findTaskById = await TaskModel.findById(id);
-
         if (!findTaskById) {
             res.status(404).send("Task not found");
         }
@@ -41,6 +40,30 @@ app.post("/tasks", async (req, res) => {
         await newTask.save();
 
         res.status(201).send(newTask);
+    } catch {
+        res.status(500).send(error.message);
+    }
+});
+
+app.patch("/tasks/:id", async (req, res) => {
+    const { id } = req.params;
+    const taskData = req.body;
+
+    try {
+        const taskToUpdate = await TaskModel.findById(id);
+        const allowedUpdates = ["isCompleted"];
+        const requestUpdates = Object.keys(taskData);
+
+        for (update of requestUpdates) {
+            if (allowedUpdates.includes(update)) {
+                taskToUpdate[update] = taskData[update];
+            } else {
+                res.status(400).send("Invalid update allowed only isCompleted");
+            }
+        }
+
+        await taskToUpdate.save();
+        res.status(200).send(taskToUpdate);
     } catch {
         res.status(500).send(error.message);
     }
