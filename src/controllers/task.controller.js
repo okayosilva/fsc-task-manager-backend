@@ -1,5 +1,10 @@
 const TaskModel = require("../models/task.model");
-const { notFoundError } = require("../errors/mongodb.errors");
+const {
+    notFoundError,
+    objectIdCastError,
+} = require("../errors/mongodb.errors");
+const { notAllowedFieldsToUpdateError } = require("../errors/general.errors");
+const { default: mongoose } = require("mongoose");
 class TaskController {
     constructor(request, response) {
         this.req = request;
@@ -11,6 +16,9 @@ class TaskController {
             const tasks = await TaskModel.find({});
             this.res.status(200).json(tasks);
         } catch (error) {
+            if (error instanceof mongoose.Error.CastError) {
+                return objectIdCastError(this.res);
+            }
             this.res.status(500).send(error.message);
         }
     }
@@ -25,6 +33,10 @@ class TaskController {
 
             this.res.status(200).send(findTaskById);
         } catch (error) {
+            if (error instanceof mongoose.Error.CastError) {
+                return objectIdCastError(this.res);
+            }
+
             this.res.status(500).send(error.message);
         }
     }
@@ -37,6 +49,9 @@ class TaskController {
 
             this.res.status(201).send(newTask);
         } catch (error) {
+            if (error instanceof mongoose.Error.CastError) {
+                return objectIdCastError(this.res);
+            }
             this.res.status(500).send(error.message);
         }
     }
@@ -59,15 +74,16 @@ class TaskController {
                 if (allowedUpdates.includes(update)) {
                     taskToUpdate[update] = taskData[update];
                 } else {
-                    this.res
-                        .status(400)
-                        .send("Invalid update allowed only isCompleted");
+                    notAllowedFieldsToUpdateError(this.res);
                 }
             }
 
             await taskToUpdate.save();
             this.res.status(200).send(taskToUpdate);
         } catch (error) {
+            if (error instanceof mongoose.Error.CastError) {
+                return objectIdCastError(this.res);
+            }
             this.res.status(500).send(error.message);
         }
     }
@@ -84,6 +100,9 @@ class TaskController {
 
             this.res.status(200).send(findTask);
         } catch (error) {
+            if (error instanceof mongoose.Error.CastError) {
+                return objectIdCastError(this.res);
+            }
             this.res.status(500).send(error.message);
         }
     }
